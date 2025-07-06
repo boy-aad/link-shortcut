@@ -1,15 +1,18 @@
-# Utilise une image officielle avec PHP et Apache
+# Utilise l'image officielle PHP avec Apache
 FROM php:8.2-apache
 
-# Copie tout le contenu de ton projet dans le dossier du serveur
+# Installe l'extension PDO MySQL
+RUN docker-php-ext-install pdo pdo_mysql
+
+# Copie tous les fichiers du projet dans le conteneur
 COPY . /var/www/html/
 
-# Active le module rewrite d'Apache (utile pour les routes)
+# Active mod_rewrite d'Apache (utile pour les routes ou .htaccess)
 RUN a2enmod rewrite
 
-# Donne les bons droits
+# Droits sur les fichiers
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Expose le port utilisé par Apache
+# Expose le port
 EXPOSE 80

@@ -10,6 +10,12 @@ if (!empty($_GET['q'])) {
 			'linkshortcut_db_user',
 			'kR5U7M4bHbKVJnlf0B8COIuG18fB7hE8'
 		);
+		$sql = "CREATE TABLE IF NOT EXISTS links (
+        id SERIAL PRIMARY KEY,
+        url TEXT NOT NULL,
+        shortcuts VARCHAR(255) NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );";
 		$bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 		// Vérifie si le lien existe

@@ -1,32 +1,40 @@
 <?php
 
-if (!empty($_GET['q'])) {
-	// variable
 
+if (!empty($_GET['q'])) {
 	$shortcut = htmlspecialchars($_GET['q']);
 
-	//Existe-t-il?
-	$bdd = new PDO('mysql:host=localhost;dbname=bitly;charset=utf8', 'root', '');
-	$requete = $bdd->prepare('SELECT COUNT(*) AS nombreDeLigne FROM links WHERE shortcuts = ?');
-	$requete->execute([$shortcut]);
+	try {
+		$bdd = new PDO(
+			'pgsql:host=dpg-d1l8sq7diees73fcdn90-a;port=5432;dbname=linkshortcut_db',
+			'linkshortcut_db_user',
+			'kR5U7M4bHbKVJnlf0B8COIuG18fB7hE8'
+		);
+		$bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-	while ($resultat = $requete->fetch()) {
+		// Vérifie si le lien existe
+		$requete = $bdd->prepare('SELECT COUNT(*) AS nombreDeLigne FROM links WHERE shortcuts = ?');
+		$requete->execute([$shortcut]);
+
+		$resultat = $requete->fetch();
 		if ($resultat['nombreDeLigne'] != 1) {
-			header("location: ./?error=true&message=Adresse url non connue");
+			header("Location: ./?error=true&message=Adresse url non connue");
 			exit();
 		}
-	}
 
-	// redirection
-	$requete = $bdd->prepare('SELECT * FROM links WHERE shortcuts = ?');
-	$requete->execute([$shortcut]);
+		// Redirection vers l'URL d'origine
+		$requete = $bdd->prepare('SELECT * FROM links WHERE shortcuts = ?');
+		$requete->execute([$shortcut]);
 
-	while ($resultat = $requete->fetch()) {
-
-		header('location:'.$resultat['url']);
+		$resultat = $requete->fetch();
+		header('Location: ' . $resultat['url']);
+		exit();
+	} catch (PDOException $e) {
+		echo "Erreur de connexion : " . $e->getMessage();
 		exit();
 	}
 }
+
 
 
 if (!empty($_POST['url'])) {
@@ -44,7 +52,11 @@ if (!empty($_POST['url'])) {
 
 
 	// verifier s'il y'a doublon d'url
-	$bdd = new PDO('mysql:host=localhost;dbname=bitly;charset=utf8', 'root', '');
+	$bdd = new PDO(
+		'pgsql:host=dpg-d1l8sq7diees73fcdn90-a;port=5432;dbname=linkshortcut_db',
+		'linkshortcut_db_user',
+		'kR5U7M4bHbKVJnlf0B8COIuG18fB7hE8'
+	); //$bdd = new PDO('mysql:host=localhost;dbname=bitly;charset=utf8', 'root', '');
 	// $requete = $bdd -> prepare('SELECT COUNT(*) AS nombreDeLigne FROM links WHERE url = ?');
 	// $requete -> execute([$url]);
 
@@ -110,17 +122,18 @@ if (!empty($_POST['url'])) {
 				</div>
 
 			<?php } else if (isset($_GET['short'])) { ?>
-
 				<div class="center">
 					<div id="result">
 						<b>URL RACCOURCIE : </b>
-					<!-- http://localhost/PHP_BELIEVEMY/projets/ -->
-
-						http://localhost/PHP_BELIEVEMY/projets/?q=<?php echo htmlspecialchars($_GET['short']); ?>
+						<?php
+						$baseUrl = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+						$baseUrl = preg_replace('/index\.php$/', '', $baseUrl);
+						echo $baseUrl . "?q=" . htmlspecialchars($_GET['short']);
+						?>
 					</div>
 				</div>
-
 			<?php } ?>
+
 
 		</div>
 
